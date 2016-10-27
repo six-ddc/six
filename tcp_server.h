@@ -29,8 +29,8 @@ public:
 
 private:
     void acceptableProc(int fd);
-    void readableProc(int fd, Channel* ch);
-    void closableProc(int fd, Channel* ch);
+    void readableProc(int fd, std::shared_ptr<Channel> ch);
+    void closableProc(int fd, std::shared_ptr<Channel> ch);
 
 protected:
     std::string     bindaddr;

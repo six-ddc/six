@@ -61,7 +61,7 @@ bool TcpServer::start() {
     }
     freeaddrinfo(servinfo);
 
-    Channel* ch = new Channel{&loop, sock};
+    std::shared_ptr<Channel> ch = std::make_shared<Channel>(&loop, sock);
     ch->setReadCallback(std::bind(&TcpServer::acceptableProc, this, std::placeholders::_1));
     ch->enableReading();
     loop.addChannel(ch);
@@ -84,20 +84,20 @@ void TcpServer::acceptableProc(int fd) {
         connectProc(newfd, std::move(ip), port);
     }
     TD::setNonblocking(newfd);
-    Channel* ch = new Channel{&loop, newfd};
+    std::shared_ptr<Channel> ch = std::make_shared<Channel>(&loop, newfd);
     ch->setReadCallback(std::bind(&TcpServer::readableProc, this, std::placeholders::_1, ch));
     ch->setCloseCallback(std::bind(&TcpServer::closableProc, this, std::placeholders::_1, ch));
     ch->enableReading();
     loop.addChannel(ch);
 }
 
-void TcpServer::closableProc(int fd, Channel* ch) {
+void TcpServer::closableProc(int fd, std::shared_ptr<Channel> ch) {
     if(closeProc) closeProc(fd);
     loop.delChannel(ch);
     ::close(fd);
 }
 
-void TcpServer::readableProc(int fd, Channel* ch) {
+void TcpServer::readableProc(int fd, std::shared_ptr<Channel> ch) {
     int len = ::read(fd, &buffer[0], buffer.size());
     int what = STATE_READING;
     if(len > 0) {

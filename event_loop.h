@@ -24,8 +24,8 @@ public:
 
     bool init();
     void stop();
-    bool addChannel(Channel* ch);
-    bool delChannel(Channel* ch);
+    bool addChannel(std::shared_ptr<Channel> ch);
+    bool delChannel(std::shared_ptr<Channel> ch);
 
     int  processEvents();
     void loop();
@@ -39,7 +39,7 @@ private:
 protected:
     bool        stopped;
     std::unique_ptr<Poll> poll;
-    std::map<int, Channel*> channelList;            // fd, channel
+    std::map<int, std::shared_ptr<Channel>> channelList;            // fd, channel
     std::function<void(EventLoop*)> beforeProc;
 };
 

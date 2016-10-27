@@ -34,6 +34,8 @@ public:
     int getFiredMask();
     void setFiredMask(int d);
 
+    void release();
+
 private:
     void delEvent(int mask);
     void addEvent(int mask);

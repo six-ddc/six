@@ -31,3 +31,13 @@ void Channel::fireEventCallback() {
         writecb(fd);
     }
 }
+
+void Channel::release() {
+    disableAll();
+    // 这里需要重置function对象，因为可能带有Channel本身的智能指针对象
+    setReadCallback(nullptr);
+    setWriteCallback(nullptr);
+    setCloseCallback(nullptr);
+    setErrorCallback(nullptr);
+}
+

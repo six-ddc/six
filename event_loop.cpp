@@ -14,15 +14,14 @@ bool EventLoop::init() {
     return poll->init();
 }
 
-bool EventLoop::addChannel(Channel* ch) {
+bool EventLoop::addChannel(std::shared_ptr<Channel> ch) {
     channelList[ch->getFd()] = ch;
     return true;
 }
 
-bool EventLoop::delChannel(Channel* ch) {
-    ch->disableAll();
+bool EventLoop::delChannel(std::shared_ptr<Channel> ch) {
+    ch->release();
     channelList.erase(ch->getFd());
-    delete ch;
     return true;
 }
 
