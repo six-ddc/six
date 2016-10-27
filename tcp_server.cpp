@@ -1,9 +1,11 @@
 #include "tcp_server.h"
+#include "channel.h"
 
 #include <cstring>
 #include <cstdio>
 
 using TD::TcpServer;
+using TD::Channel;
 
 #define DEFAULT_BUFFER_SIZE 128
 
@@ -59,10 +61,10 @@ bool TcpServer::start() {
     }
     freeaddrinfo(servinfo);
 
-    auto func = std::bind(&TcpServer::acceptableProc, this, std::placeholders::_1);
-    if(!loop.addFileEvent(sock, EVENT_READABLE, func, nullptr)) {
-        return false;
-    }
+    Channel* ch = new Channel{&loop, sock};
+    ch->setReadCallback(std::bind(&TcpServer::acceptableProc, this, std::placeholders::_1));
+    ch->enableReading();
+    loop.addChannel(ch);
 
     std::cout<<"fd="<<sock<<" listening..."<<std::endl;
 
@@ -82,34 +84,41 @@ void TcpServer::acceptableProc(int fd) {
         connectProc(newfd, std::move(ip), port);
     }
     TD::setNonblocking(newfd);
-    auto func = std::bind(&TcpServer::readableProc, this, std::placeholders::_1);
-    if(!loop.addFileEvent(newfd, EVENT_READABLE, func, nullptr)) {
-        std::cout<<"addFileEvent error"<<std::endl;
-        return;
-    }
+    Channel* ch = new Channel{&loop, newfd};
+    ch->setReadCallback(std::bind(&TcpServer::readableProc, this, std::placeholders::_1, ch));
+    ch->setCloseCallback(std::bind(&TcpServer::closableProc, this, std::placeholders::_1, ch));
+    ch->enableReading();
+    loop.addChannel(ch);
 }
 
-void TcpServer::readableProc(int fd) {
+void TcpServer::closableProc(int fd, Channel* ch) {
+    if(closeProc) closeProc(fd);
+    loop.delChannel(ch);
+    ::close(fd);
+}
+
+void TcpServer::readableProc(int fd, Channel* ch) {
     int len = ::read(fd, &buffer[0], buffer.size());
     int what = STATE_READING;
     if(len > 0) {
-        if(messageProc) { messageProc(fd, std::string(buffer.data(), len));
-        }
+        if(messageProc) messageProc(fd, std::string(buffer.data(), len));
         if(len == buffer.size()) {
-            readableProc(fd);
+            readableProc(fd, ch);
         }
     } else {
         if(len == 0) {
             what |= STATE_EOF;
+            if(closeProc) closeProc(fd);
+            loop.delChannel(ch);
+            ::close(fd);
         } else {
             if(errno == EINTR || errno == EAGAIN) {
                 return;
             }
             what |= STATE_ERROR;
+            if(errorProc) errorProc(fd, what);
+            loop.delChannel(ch);
+            ::close(fd);
         }
-        if(errorProc) {
-            errorProc(fd, what);
-        }
-        loop.delFileEvent(fd, EVENT_READABLE);
     }
 }

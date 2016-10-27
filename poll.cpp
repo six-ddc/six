@@ -2,12 +2,8 @@
 
 #ifdef __linux__
     #include "poll_epoll.h"
-#else
-    #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined (__NetBSD__)
-        #include "poll_kqueue.h"
-    #else
-        #include "poll_select.h"
-    #endif
+#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined (__NetBSD__)
+    #include "poll_kqueue.h"
 #endif
 
 namespace TD {
@@ -15,12 +11,10 @@ namespace TD {
 Poll* Poll::newPoll() {
 #ifdef __linux__
     return new EpollPoll();
+#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined (__NetBSD__)
+    return new KqueuePoll();
 #else
-    #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined (__NetBSD__)
-        return new KqueuePoll();
-    #else
-        return new SelectPoll();
-    #endif
+    return NULL;
 #endif
 }
 

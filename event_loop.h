@@ -12,10 +12,10 @@ namespace TD {
 
 class EventLoop;
 class Poll;
+class Channel;
 
 class EventLoop {
-
-    typedef std::pair<int, int>         fired_event;    // fd, mask
+    friend class Channel;
 public:
     EventLoop();
     virtual ~EventLoop();
@@ -24,23 +24,23 @@ public:
 
     bool init();
     void stop();
-    bool addFileEvent(int fd, int mask, rw_callback rcall, rw_callback wcall);
-    bool delFileEvent(int fd, int mask);
-    int  getFileEventMask(int fd);
+    bool addChannel(Channel* ch);
+    bool delChannel(Channel* ch);
+
     int  processEvents();
     void loop();
     const char* getPollName();
+    std::size_t getChannelSize();
 
 private:
-    void eventProc(int fd, int mask);
+    void addEvent(Channel* ch, int mask);
+    void delEvent(Channel* ch, int mask);
 
 protected:
     bool        stopped;
     std::unique_ptr<Poll> poll;
-
+    std::map<int, Channel*> channelList;            // fd, channel
     std::function<void(EventLoop*)> beforeProc;
-
-    std::map<int, rw_event> events;
 };
 
 // inline
@@ -51,6 +51,10 @@ inline void EventLoop::setEventBeforeProc(std::function<void(EventLoop*)> proc) 
 
 inline void EventLoop::stop() {
     stopped = true;
+}
+
+inline std::size_t EventLoop::getChannelSize() {
+    return channelList.size();
 }
 
 }

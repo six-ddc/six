@@ -11,7 +11,8 @@ namespace TD {
 class TcpServer {
     typedef std::function<void(int, std::string, unsigned short port)> connect_handler;     // fd, ip, port
     typedef std::function<void(int, std::string)> message_handler;       // fd
-    typedef std::function<void(int, int)> error_handler;  // fd, STATE_*
+    typedef std::function<void(int)> close_handler;  // fd
+    typedef std::function<void(int, int)> error_handler;   // fd, STATE_**
 public:
     TcpServer(const char* bindaddr, unsigned short port, int backlog = 1024, int af = AF_INET);
 
@@ -20,6 +21,7 @@ public:
 
     void onConnect(connect_handler handler);
     void onMessage(message_handler handler);
+    void onClose(close_handler handler);
     void onError(error_handler handler);
 
     std::string getLastError();
@@ -27,7 +29,8 @@ public:
 
 private:
     void acceptableProc(int fd);
-    void readableProc(int fd);
+    void readableProc(int fd, Channel* ch);
+    void closableProc(int fd, Channel* ch);
 
 protected:
     std::string     bindaddr;
@@ -40,6 +43,7 @@ protected:
 
     connect_handler connectProc;
     message_handler messageProc;
+    close_handler   closeProc;
     error_handler   errorProc;
 
     EventLoop       loop;
@@ -59,6 +63,10 @@ inline void TcpServer::onConnect(connect_handler handler) {
 
 inline void TcpServer::onMessage(message_handler handler) {
     messageProc = handler;
+}
+
+inline void TcpServer::onClose(close_handler handler) {
+    closeProc = handler;
 }
 
 inline void TcpServer::onError(error_handler handler) {

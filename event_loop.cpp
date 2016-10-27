@@ -1,5 +1,6 @@
 #include "event_loop.h"
-#include "Poll.h"
+#include "poll.h"
+#include "channel.h"
 
 using TD::EventLoop;
 
@@ -13,56 +14,35 @@ bool EventLoop::init() {
     return poll->init();
 }
 
-bool EventLoop::addFileEvent(int fd, int mask, rw_callback rcall, rw_callback wcall) {
-    if(!poll->addEvent(fd, mask)) {
-        return false;
-    }
-    auto iter = events.find(fd);
-    if(iter != events.end()) {
-        int& omask = std::get<1>(iter->second);
-        omask |= mask;
-        std::get<2>(iter->second) = rcall;
-        std::get<3>(iter->second) = wcall;
-    } else {
-        events[fd] = std::make_tuple(fd, mask, rcall, wcall);
-    }
+bool EventLoop::addChannel(Channel* ch) {
+    channelList[ch->getFd()] = ch;
     return true;
 }
 
-bool EventLoop::delFileEvent(int fd, int mask) {
-    auto iter = events.find(fd);
-    if(iter != events.end()) {
-        int& omask = std::get<1>(iter->second);
-        omask &= (~mask);
-        if(omask == EVENT_NONE) {
-            events.erase(fd);
-        }
-    }
-
-    poll->delEvent(fd, mask);
+bool EventLoop::delChannel(Channel* ch) {
+    ch->disableAll();
+    channelList.erase(ch->getFd());
+    delete ch;
     return true;
 }
 
-int EventLoop::getFileEventMask(int fd) {
-    return std::get<1>(events[fd]);
+void EventLoop::addEvent(Channel* ch, int mask) {
+    poll->addEvent(ch, mask);
 }
 
-void EventLoop::eventProc(int fd, int mask) {
-    rw_callback rcall, wcall;
-    std::tie(std::ignore, std::ignore, rcall, wcall) = events[fd];
-    if(mask & EVENT_READABLE && rcall) {
-        rcall(fd);
-    }
-    if(mask & EVENT_WRITABLE && wcall) {
-        wcall(fd);
-    }
+void EventLoop::delEvent(Channel* ch, int mask) {
+    poll->delEvent(ch, mask);
 }
 
 int EventLoop::processEvents() {
     struct timeval tv;
     tv.tv_sec = 1;
     tv.tv_usec = 0;
-    int numevents = poll->poll(&tv, std::bind(&EventLoop::eventProc, this, std::placeholders::_1, std::placeholders::_2));
+    std::vector<Channel*> fired;
+    int numevents = poll->poll(&tv, fired);
+    for(Channel* ch : fired) {
+        ch->fireEventCallback();
+    }
     return numevents;
 }
 

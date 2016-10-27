@@ -24,6 +24,8 @@ class EventLoop;
 #define EVENT_NONE      0x00
 #define EVENT_READABLE  0x01
 #define EVENT_WRITABLE  0x02
+#define EVENT_CLOSABLE  0x04
+#define EVENT_ERROR     0x08
 
 #define STATE_READING   0x01
 #define STATE_WRITING   0x02
