@@ -21,23 +21,21 @@ void Channel::delEvent(int mask) {
 }
 
 void Channel::fireEventCallback() {
-    if(firedMask & EVENT_CLOSABLE && closecb) {
-        closecb(fd);
+    if((firedMask & EVENT_CLOSABLE) && closecb) {
+        closecb(getShared());
     }
-    if(firedMask & EVENT_READABLE && readcb) {
-        readcb(fd);
+    if((firedMask & EVENT_READABLE) && readcb) {
+        readcb(getShared());
     }
-    if(firedMask & EVENT_WRITABLE && writecb) {
-        writecb(fd);
+    if((firedMask & EVENT_WRITABLE) && writecb) {
+        writecb(getShared());
+    }
+    if((firedMask & EVENT_ERROR) && errorcb) {
+        errorcb(getShared());
     }
 }
 
 void Channel::release() {
     disableAll();
-    // 这里需要重置function对象，因为可能带有Channel本身的智能指针对象
-    setReadCallback(nullptr);
-    setWriteCallback(nullptr);
-    setCloseCallback(nullptr);
-    setErrorCallback(nullptr);
 }
 

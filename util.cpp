@@ -29,15 +29,17 @@ bool TD::accept(int sock, int& fd, std::string* ip, unsigned short* port) {
         if(sa.ss_family == AF_INET) {
             auto s = reinterpret_cast<struct sockaddr_in*>(&sa);
             if (ip) {
-                ip->resize(INET_ADDRSTRLEN);
-                inet_ntop(AF_INET, &(s->sin_addr), &(*ip)[0], ip->size());
+                char ip_buf[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &(s->sin_addr), ip_buf, INET_ADDRSTRLEN);
+                ip->assign(ip_buf);
             }
             if (port) *port = ntohs(s->sin_port);
         } else {
             auto s = reinterpret_cast<struct sockaddr_in6*>(&sa);
             if (ip) {
-                ip->resize(INET6_ADDRSTRLEN);
-                inet_ntop(AF_INET, &(s->sin6_addr), &(*ip)[0], ip->size());
+                char ip_buf[INET6_ADDRSTRLEN];
+                inet_ntop(AF_INET, &(s->sin6_addr), ip_buf, INET6_ADDRSTRLEN);
+                ip->assign(ip_buf);
             }
             if (port) *port = ntohs(s->sin6_port);
         }

@@ -5,14 +5,15 @@
 
 #include "event_loop.h"
 #include "util.h"
+#include "channel.h"
 
 namespace TD {
 
 class TcpServer {
-    typedef std::function<void(int, std::string, unsigned short port)> connect_handler;     // fd, ip, port
-    typedef std::function<void(int, std::string)> message_handler;       // fd
-    typedef std::function<void(int)> close_handler;  // fd
-    typedef std::function<void(int, int)> error_handler;   // fd, STATE_**
+    typedef std::function<void(std::shared_ptr<Channel> ch, std::string ip, unsigned short port)> connect_handler;
+    typedef std::function<void(std::shared_ptr<Channel> ch, std::string msg)> message_handler;
+    typedef std::function<void(std::shared_ptr<Channel> ch)> close_handler;
+    typedef std::function<void(std::shared_ptr<Channel> ch, int state)> error_handler;
 public:
     TcpServer(const char* bindaddr, unsigned short port, int backlog = 1024, int af = AF_INET);
 
@@ -28,9 +29,9 @@ public:
     const char* getPollName();
 
 private:
-    void acceptableProc(int fd);
-    void readableProc(int fd, std::shared_ptr<Channel> ch);
-    void closableProc(int fd, std::shared_ptr<Channel> ch);
+    void acceptableProc(std::shared_ptr<Channel> ch);
+    void readableProc(std::shared_ptr<Channel> ch);
+    void closableProc(std::shared_ptr<Channel> ch);
 
 protected:
     std::string     bindaddr;

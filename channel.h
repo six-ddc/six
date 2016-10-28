@@ -8,13 +8,16 @@ namespace TD {
 
 class EventLoop;
 
-class Channel {
+class Channel : public std::enable_shared_from_this<Channel> {
+
     friend std::ostream& operator<<(std::ostream& os, const Channel* ch);
 public:
-    typedef std::function<void(int fd)> event_cb;
+    typedef std::function<void(std::shared_ptr<Channel> ch)> event_cb;
 
     Channel(EventLoop* lp, int fd_) : loop(lp), fd(fd_), mask(EVENT_NONE) {}
     virtual ~Channel();
+
+    std::shared_ptr<Channel> getShared();
 
     void setReadCallback(const event_cb& cb);
     void setWriteCallback(const event_cb& cb);
@@ -52,6 +55,10 @@ protected:
 };
 
 std::ostream& operator<<(std::ostream& os, const Channel* ch);
+
+inline std::shared_ptr<Channel> Channel::getShared() {
+    return shared_from_this();
+}
 
 inline void Channel::setReadCallback(const event_cb& cb) {
     readcb = cb;

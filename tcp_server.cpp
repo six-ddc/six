@@ -73,50 +73,50 @@ bool TcpServer::start() {
     return true;
 }
 
-void TcpServer::acceptableProc(int fd) {
+void TcpServer::acceptableProc(std::shared_ptr<Channel> ch) {
     int newfd;
     std::string ip; unsigned short port;
-    if(!TD::accept(fd, newfd, &ip, &port)) {
+    if(!TD::accept(ch->getFd(), newfd, &ip, &port)) {
         std::cout<<"accept error"<<std::endl;
         return;
     }
-    if(connectProc) {
-        connectProc(newfd, std::move(ip), port);
-    }
     TD::setNonblocking(newfd);
-    std::shared_ptr<Channel> ch = std::make_shared<Channel>(&loop, newfd);
-    ch->setReadCallback(std::bind(&TcpServer::readableProc, this, std::placeholders::_1, ch));
-    ch->setCloseCallback(std::bind(&TcpServer::closableProc, this, std::placeholders::_1, ch));
-    ch->enableReading();
-    loop.addChannel(ch);
+    std::shared_ptr<Channel> new_ch = std::make_shared<Channel>(&loop, newfd);
+    new_ch->setReadCallback(std::bind(&TcpServer::readableProc, this, std::placeholders::_1));
+    new_ch->setCloseCallback(std::bind(&TcpServer::closableProc, this, std::placeholders::_1));
+    new_ch->enableReading();
+    loop.addChannel(new_ch);
+    if(connectProc) {
+        connectProc(ch, std::move(ip), port);
+    }
 }
 
-void TcpServer::closableProc(int fd, std::shared_ptr<Channel> ch) {
-    if(closeProc) closeProc(fd);
+void TcpServer::closableProc(std::shared_ptr<Channel> ch) {
+    int fd = ch->getFd();
+    if(closeProc) closeProc(ch);
     loop.delChannel(ch);
     ::close(fd);
 }
 
-void TcpServer::readableProc(int fd, std::shared_ptr<Channel> ch) {
-    int len = ::read(fd, &buffer[0], buffer.size());
+void TcpServer::readableProc(std::shared_ptr<Channel> ch) {
+    int fd = ch->getFd();
+    std::size_t len = ::read(fd, &buffer[0], buffer.size());
     int what = STATE_READING;
     if(len > 0) {
-        if(messageProc) messageProc(fd, std::string(buffer.data(), len));
+        if(messageProc) messageProc(ch, std::string(buffer.data(), len));
         if(len == buffer.size()) {
-            readableProc(fd, ch);
+            readableProc(ch);
         }
     } else {
         if(len == 0) {
             what |= STATE_EOF;
-            if(closeProc) closeProc(fd);
-            loop.delChannel(ch);
-            ::close(fd);
+            closableProc(ch);
         } else {
             if(errno == EINTR || errno == EAGAIN) {
                 return;
             }
             what |= STATE_ERROR;
-            if(errorProc) errorProc(fd, what);
+            if(errorProc) errorProc(ch, what);
             loop.delChannel(ch);
             ::close(fd);
         }
