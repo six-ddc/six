@@ -37,5 +37,13 @@ void Channel::fireEventCallback() {
 
 void Channel::release() {
     disableAll();
+    close();
 }
 
+void Channel::send(const std::string& msg) {
+    ::write(fd, msg.data(), msg.size());
+}
+
+void Channel::send(const char* msg) {
+    ::write(fd, msg, std::strlen(msg));
+}

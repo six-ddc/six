@@ -14,27 +14,30 @@ class Channel : public std::enable_shared_from_this<Channel> {
 public:
     typedef std::function<void(std::shared_ptr<Channel> ch)> event_cb;
 
-    Channel(EventLoop* lp, int fd_) : loop(lp), fd(fd_), mask(EVENT_NONE) {}
+    Channel(EventLoop* lp, int fd_) : loop(lp), fd(fd_), mask(EVENT_NONE), closed(false) {}
     virtual ~Channel();
-
-    std::shared_ptr<Channel> getShared();
 
     void setReadCallback(const event_cb& cb);
     void setWriteCallback(const event_cb& cb);
     void setCloseCallback(const event_cb& cb);
     void setErrorCallback(const event_cb& cb);
 
+    void send(const std::string& msg);
+    void send(const char* msg);
+
+    void close();
+
     void fireEventCallback();
     
     int getMask();
     int getFd();
+
     void enableReading();
     void disableReading();
     void enableWriting();
     void disableWriting();
     void disableAll();
 
-    int getFiredMask();
     void setFiredMask(int d);
 
     void release();
@@ -42,6 +45,8 @@ public:
 private:
     void delEvent(int mask);
     void addEvent(int mask);
+
+    std::shared_ptr<Channel> getShared();
 
 protected:
     event_cb readcb;
@@ -52,6 +57,7 @@ protected:
     int fd;
     int mask;
     int firedMask;      // 当前循环触发的事件
+    int closed;
 };
 
 std::ostream& operator<<(std::ostream& os, const Channel* ch);
@@ -112,13 +118,17 @@ inline void Channel::disableWriting() {
     }
 }
 
+inline void Channel::close() {
+    if(!closed) {
+        ::close(fd);
+        closed = true;
+        // fd 不能置0
+    }
+}
+
 inline void Channel::disableAll() {
     disableReading();
     disableWriting();
-}
-
-inline int Channel::getFiredMask() {
-    return firedMask;
 }
 
 inline void Channel::setFiredMask(int d) {

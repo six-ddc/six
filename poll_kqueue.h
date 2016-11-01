@@ -33,8 +33,8 @@ public:
         kqfd = ::kqueue();
         return kqfd != -1;
     }
-    virtual bool resize(std::size_t setsize) override {
-        kevents.resize(setsize);
+    virtual bool resize(std::size_t setSize) override {
+        kevents.resize(setSize);
         return true;
     }
     virtual bool addEvent(Channel* ch, int mask) override {
@@ -56,11 +56,11 @@ public:
         struct kevent ke;
         int fd = ch->getFd();
         if(mask & EVENT_READABLE) {
-            EV_SET(&ke, fd, EVFILT_READ, EV_DELETE, 0, 0, ch);
+            EV_SET(&ke, fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
             if(kevent(kqfd, &ke, 1, NULL, 0, NULL) == -1) return false;
         }
         if(mask & EVENT_WRITABLE) {
-            EV_SET(&ke, fd, EVFILT_WRITE, EV_DELETE, 0, 0, ch);
+            EV_SET(&ke, fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
             if(kevent(kqfd, &ke, 1, NULL, 0, NULL) == -1) return false;
         }
         return true;
@@ -81,7 +81,7 @@ public:
             for(int j = 0; j < retval; j++) {
                 int mask = EVENT_NONE;
                 struct kevent *e = &kevents[j];
-                std::cout<<"POLL EVENT:"<<e<<std::endl;
+                // std::cout<<"POLL EVENT:"<<e<<std::endl;
                 if(e->filter == EVFILT_READ) {
                     if(e->flags & EV_EOF)                   // 读到EOF则不回调可读函数
                         mask |= EVENT_CLOSABLE;
@@ -89,7 +89,7 @@ public:
                         mask |= EVENT_READABLE;
                 }
                 if(e->filter == EVFILT_WRITE) mask |= EVENT_WRITABLE;
-                if(mask != EVENT_NONE) {
+                if(mask != EVENT_NONE && e->udata) {
                     Channel* ch = reinterpret_cast<Channel*>(e->udata);
                     ch->setFiredMask(mask);
                     fired.push_back(ch);

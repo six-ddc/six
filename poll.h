@@ -19,7 +19,7 @@ public:
     static Poll* newPoll();
 
     virtual bool init() = 0;
-    virtual bool resize(std::size_t setsize) = 0;
+    virtual bool resize(std::size_t setSize) = 0;
     virtual bool addEvent(Channel* ch, int mask) = 0;
     virtual bool delEvent(Channel* ch, int mask) = 0;
     virtual int  poll(struct timeval* tvp, std::vector<Channel*>& fired) = 0;
