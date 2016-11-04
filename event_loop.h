@@ -37,7 +37,7 @@ private:
     void delEvent(Channel* ch, int mask);
 
 protected:
-    bool        stopped;
+    bool stopped;
     std::unique_ptr<Poll> poll;
     std::map<int, std::shared_ptr<Channel>> channelList;            // fd, channel
     std::function<void(EventLoop*)> beforeProc;

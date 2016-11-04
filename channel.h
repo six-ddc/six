@@ -14,7 +14,7 @@ class Channel : public std::enable_shared_from_this<Channel> {
 public:
     typedef std::function<void(std::shared_ptr<Channel> ch)> event_cb;
 
-    Channel(EventLoop* lp, int fd_) : loop(lp), fd(fd_), mask(EVENT_NONE), closed(false) {}
+    Channel(std::weak_ptr<EventLoop> lp, int fd_) : loop(lp), fd(fd_), mask(EVENT_NONE), closed(false) {}
     virtual ~Channel();
 
     void setReadCallback(const event_cb& cb);
@@ -53,7 +53,7 @@ protected:
     event_cb writecb;
     event_cb closecb;
     event_cb errorcb;
-    EventLoop* loop;
+    std::weak_ptr<EventLoop> loop;
     int fd;
     int mask;
     int firedMask;      // 当前循环触发的事件

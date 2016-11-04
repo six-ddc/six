@@ -13,11 +13,11 @@ Channel::~Channel() {
 }
 
 void Channel::addEvent(int mask) {
-    loop->addEvent(this, mask);
+    loop.lock()->addEvent(this, mask);
 }
 
 void Channel::delEvent(int mask) {
-    loop->delEvent(this, mask);
+    loop.lock()->delEvent(this, mask);
 }
 
 void Channel::fireEventCallback() {

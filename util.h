@@ -33,9 +33,6 @@ class EventLoop;
 #define STATE_ERROR     0x08
 #define STATE_TIMEOUT   0x10
 
-typedef std::function<void(int)>                        rw_callback;    // void rw_callback(int fd)
-typedef std::tuple<int, int, rw_callback, rw_callback>  rw_event;       // fd, mask, readable_cb, writable_cb
-
 bool listen(int sock, struct sockaddr *sa, socklen_t len, int backlog);
 bool accept(int sock, int& accept_fd, std::string* ip, unsigned short* port);
 bool setReuseAddr(int fd);

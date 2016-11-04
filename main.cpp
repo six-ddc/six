@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
     serv.onClose([](std::shared_ptr<SampleTcpServer::Session> ch){
         std::cout<<"close:"<<ch->getFd()<<" EOF"<<std::endl;
     });
+    serv.setThreadNum(5);
     bool ret = serv.start();
     if(!ret) {
         std::cout<<"error:"<<serv.getLastError()<<std::endl;

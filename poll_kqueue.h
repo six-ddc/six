@@ -100,7 +100,8 @@ public:
                 resize(kevents.size() * 2);
             }
         } else if(retval < 0) {
-            std::cout<<"poll error="<<errno<<"--"<<strerror(errno)<<std::endl;
+            int eno = errno;
+            std::cerr<<"poll error. "<<eno<<":"<<strerror(eno)<<std::endl;
         }
         return eventnum;
     }
