@@ -8,7 +8,7 @@
 #include "alloc.h"
 #include "util.h"
 
-namespace TD {
+namespace Six {
 
 class EventLoop;
 class Poll;

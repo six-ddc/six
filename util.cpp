@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 
-bool TD::listen(int sock, struct sockaddr *sa, socklen_t len, int backlog) {
+bool Six::listen(int sock, struct sockaddr *sa, socklen_t len, int backlog) {
     if (::bind(sock, sa, len) == -1) {
         return false;
     }
@@ -14,7 +14,7 @@ bool TD::listen(int sock, struct sockaddr *sa, socklen_t len, int backlog) {
     return true;
 }
 
-bool TD::accept(int sock, int& fd, std::string* ip, unsigned short* port) {
+bool Six::accept(int sock, int& fd, std::string* ip, unsigned short* port) {
     struct sockaddr_storage sa;
     socklen_t salen = sizeof(sa);
     while(1) {
@@ -48,17 +48,17 @@ bool TD::accept(int sock, int& fd, std::string* ip, unsigned short* port) {
     return true;
 }
 
-bool TD::setReuseAddr(int fd) {
+bool Six::setReuseAddr(int fd) {
     int opt = 1;
     return setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == 0;
 }
 
-bool TD::setKeepAlive(int fd) {
+bool Six::setKeepAlive(int fd) {
     int opt = 1;
     return setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(opt)) == 0;
 }
 
-bool TD::setNonblocking(int fd) {
+bool Six::setNonblocking(int fd) {
     int flags;
     if ((flags = fcntl(fd, F_GETFL, NULL)) < 0) {
         return false;
@@ -69,7 +69,7 @@ bool TD::setNonblocking(int fd) {
     return true;
 }
 
-bool TD::setCloseOnExec(int fd) {
+bool Six::setCloseOnExec(int fd) {
     int flags;
     if ((flags = fcntl(fd, F_GETFD, NULL)) < 0) {
         return false;

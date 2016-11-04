@@ -9,7 +9,7 @@
 #include "util.h"
 #include "channel.h"
 
-namespace TD {
+namespace Six {
 
 template <typename ChType>
 TcpServer<ChType>::TcpServer(const char* _bindaddr, unsigned short _port, int _backlog/* = 1024*/, int _af/* = AF_INET*/)
@@ -34,11 +34,11 @@ template <typename ChType>
 void TcpServer<ChType>::acceptableProc(std::shared_ptr<ChType> ch) {
     int newfd;
     std::string ip; unsigned short port;
-    if(!TD::accept(ch->getFd(), newfd, &ip, &port)) {
+    if(!Six::accept(ch->getFd(), newfd, &ip, &port)) {
         std::cout<<"accept error"<<std::endl;
         return;
     }
-    TD::setNonblocking(newfd);
+    Six::setNonblocking(newfd);
     auto new_ch = std::make_shared<ChType>(listenLoop, newfd);
     new_ch->setReadCallback(std::bind(&TcpServer<ChType>::readableProc, this, std::placeholders::_1));
     new_ch->setCloseCallback(std::bind(&TcpServer<ChType>::closableProc, this, std::placeholders::_1));
@@ -119,14 +119,14 @@ bool TcpServer<ChType>::startListenThread() {
                 return false;
             }
         }
-        if(!(TD::setNonblocking(listenFd) && TD::setKeepAlive(listenFd) && TD::setReuseAddr(listenFd))) {
+        if(!(Six::setNonblocking(listenFd) && Six::setKeepAlive(listenFd) && Six::setReuseAddr(listenFd))) {
             int eno = errno;
             ::close(listenFd);
             freeaddrinfo(servinfo);
             errmsg.assign(::strerror(eno));
             return false;
         }
-        if(!TD::listen(listenFd, p->ai_addr, p->ai_addrlen, backlog)) {
+        if(!Six::listen(listenFd, p->ai_addr, p->ai_addrlen, backlog)) {
             int eno = errno;
             ::close(listenFd);
             freeaddrinfo(servinfo);

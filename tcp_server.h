@@ -9,7 +9,7 @@
 #include "util.h"
 #include "channel.h"
 
-namespace TD {
+namespace Six {
 
 template <typename ChType = Channel>
 class TcpServer {

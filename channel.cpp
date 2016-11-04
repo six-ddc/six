@@ -1,9 +1,9 @@
 #include "channel.h"
 #include "event_loop.h"
 
-using TD::Channel;
+using Six::Channel;
 
-std::ostream& TD::operator<<(std::ostream& os, const Channel* ch) {
+std::ostream& Six::operator<<(std::ostream& os, const Channel* ch) {
     os<<"{fd="<<ch->fd<<" mask="<<ch->mask<<"}";
     return os;
 }

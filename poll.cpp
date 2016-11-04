@@ -6,7 +6,7 @@
     #include "poll_kqueue.h"
 #endif
 
-namespace TD {
+namespace Six {
 
 Poll* Poll::newPoll() {
 #ifdef __linux__

@@ -2,7 +2,7 @@
 #include "poll.h"
 #include "channel.h"
 
-using TD::EventLoop;
+using Six::EventLoop;
 
 EventLoop::EventLoop() : stopped(false), poll(Poll::newPoll()) {
 }
