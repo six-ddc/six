@@ -153,23 +153,6 @@ bool TcpServer<ChType>::startWorkerThread() {
         auto loop = std::make_shared<EventLoop>();
         if(!loop->init()) break;
 
-        int notifyFd[2];
-
-        if(socketpair(AF_UNIX, SOCK_STREAM, 0, notifyFd) == -1) {
-            int eno = errno;
-            std::cerr<<"socketpair error. "<<eno<<":"<<strerror(eno)<<std::endl;
-            return false;
-        }
-        setNonblocking(notifyFd[0]);
-        setNonblocking(notifyFd[1]);
-
-        auto ch1 = std::make_shared<ChType>(loop, notifyFd[1]);
-        ch1->setReadCallback(std::bind(&TcpServer<ChType>::workerReadableProc, this, std::placeholders::_1, i));
-        ch1->enableReading();
-        loop->addChannel(ch1);
-
-        notifyPair.push_back(std::make_pair(ch1, notifyFd[0]));
-
         auto th = std::make_shared<std::thread>([this, loop, i]{
             this->workerInitCallback(loop, i);
         });
@@ -197,18 +180,11 @@ std::shared_ptr<EventLoop> TcpServer<ChType>::getNextLoop() {
 }
 
 template <typename ChType>
-void TcpServer<ChType>::workerReadableProc(std::shared_ptr<ChType> ch, int threadIdx) {
-    int fd = ch->getFd();
-    char buf[1] = {0};
-    std::size_t len = ::read(fd, buf, 1);
-    std::cout<<"recv..."<<buf[0]<<std::endl;
-}
-
-template <typename ChType>
 void TcpServer<ChType>::wakeupWorker(int threadIdx) {
-    int fd = notifyPair[threadIdx].second;
+    /*
     char buf[1] = {'w'};
     ::write(fd, buf, 1);
+    */
 }
 
 }

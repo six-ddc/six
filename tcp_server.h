@@ -44,7 +44,6 @@ private:
     void closableProc(std::shared_ptr<ChType> ch);
     void errorProc(std::shared_ptr<ChType> ch);
 
-    void workerReadableProc(std::shared_ptr<ChType> ch, int threadIdx);
     void wakeupWorker(int threadIdx);
 
     bool startListenThread();
@@ -73,7 +72,6 @@ protected:
     int             threadNum;
     int             nextIdx;
     std::vector<std::shared_ptr<EventLoop>>   loops;
-    std::vector<std::pair<std::shared_ptr<ChType>, int>> notifyPair;
     std::vector<std::shared_ptr<std::thread>> threads;
 
 };

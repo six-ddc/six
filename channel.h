@@ -46,8 +46,6 @@ private:
     void delEvent(int mask);
     void addEvent(int mask);
 
-    std::shared_ptr<Channel> getShared();
-
 protected:
     event_cb readcb;
     event_cb writecb;
@@ -61,10 +59,6 @@ protected:
 };
 
 std::ostream& operator<<(std::ostream& os, const Channel* ch);
-
-inline std::shared_ptr<Channel> Channel::getShared() {
-    return shared_from_this();
-}
 
 inline void Channel::setReadCallback(const event_cb& cb) {
     readcb = cb;

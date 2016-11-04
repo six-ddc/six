@@ -22,16 +22,16 @@ void Channel::delEvent(int mask) {
 
 void Channel::fireEventCallback() {
     if((firedMask & EVENT_CLOSABLE) && closecb) {
-        closecb(getShared());
+        closecb(shared_from_this());
     }
     if((firedMask & EVENT_READABLE) && readcb) {
-        readcb(getShared());
+        readcb(shared_from_this());
     }
     if((firedMask & EVENT_WRITABLE) && writecb) {
-        writecb(getShared());
+        writecb(shared_from_this());
     }
     if((firedMask & EVENT_ERROR) && errorcb) {
-        errorcb(getShared());
+        errorcb(shared_from_this());
     }
 }
 
